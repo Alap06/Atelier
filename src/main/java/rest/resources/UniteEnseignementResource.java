@@ -20,7 +20,7 @@ public class UniteEnseignementResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response createUE(UniteEnseignement ue) {
         if (!service.create(ue))
-            return Response.status(Response.Status.NOT_FOUND).entity("Code déjà existant.").build();
+            return Response.status(Response.Status.CONFLICT).entity("Code déjà existant.").build();
         return Response.status(Response.Status.CREATED).entity(ue).build();
     }
 

@@ -8,14 +8,33 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.Properties;
 
 @Path("/auth")
 public class AuthenticationEndPoint {
 
-    private static final String KEY_STRING      = "simplekey";
-    private static final long   TOKEN_EXPIRY_MS = 60 * 60 * 1000L;
+    public static final String KEY_STRING = System.getenv().getOrDefault(
+            "JWT_SECRET",
+            "UneCleSecreteTresLongueEtSecuriseePourLeProjetAtelierRESTHS512Key1234567890!"
+    );
+    private static final long TOKEN_EXPIRY_MS = 60 * 60 * 1000L;
+    private static final Properties USERS = new Properties();
+
+    static {
+        try (InputStream in = AuthenticationEndPoint.class.getClassLoader().getResourceAsStream("users.properties")) {
+            if (in != null) {
+                USERS.load(in);
+            } else {
+                System.err.println("Avertissement: users.properties non trouvé dans le classpath.");
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur lors du chargement de users.properties : " + e.getMessage());
+        }
+    }
 
     @POST
     @Path("/login")
@@ -23,6 +42,9 @@ public class AuthenticationEndPoint {
     @Produces(MediaType.TEXT_PLAIN)
     public Response authenticateUser(Credentials cred) {
         try {
+            if (cred == null || cred.getUsername() == null || cred.getPassword() == null) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("Identifiants manquants.").build();
+            }
             authenticate(cred.getUsername(), cred.getPassword());
             String token = issueToken(cred.getUsername());
             System.out.println("Token généré pour [" + cred.getUsername() + "] : " + token);
@@ -35,14 +57,15 @@ public class AuthenticationEndPoint {
     }
 
     private void authenticate(String username, String password) {
-        boolean valid = ("Mariem".equals(username) && "mariem".equals(password))
-                     || ("Admin".equals(username)  && "admin123".equals(password));
+        String expectedPassword = USERS.getProperty(username);
+        boolean valid = expectedPassword != null && expectedPassword.equals(password);
         if (!valid) throw new NotAuthorizedException("Identifiants invalides");
         System.out.println("Authentification réussie pour : " + username);
     }
 
     private String issueToken(String username) {
-        Key key = new SecretKeySpec(KEY_STRING.getBytes(), 0, KEY_STRING.getBytes().length, "DES");
+        byte[] keyBytes = KEY_STRING.getBytes(StandardCharsets.UTF_8);
+        Key key = new SecretKeySpec(keyBytes, SignatureAlgorithm.HS512.getJcaName());
         Date now = new Date();
         return Jwts.builder()
                    .setSubject(username)

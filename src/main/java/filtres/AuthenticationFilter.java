@@ -1,6 +1,7 @@
 package filtres;
 
 import io.jsonwebtoken.Jwts;
+import rest.resources.AuthenticationEndPoint;
 
 import javax.annotation.Priority;
 import javax.crypto.spec.SecretKeySpec;
@@ -11,6 +12,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 
 @Secured
@@ -19,7 +21,6 @@ import java.security.Key;
 public class AuthenticationFilter implements ContainerRequestFilter {
 
     private static final String AUTHENTICATION_SCHEME = "Bearer";
-    private static final String KEY_STRING            = "simplekey";
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -50,7 +51,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     private void validateToken(String token, ContainerRequestContext ctx) {
         try {
-            Key key = new SecretKeySpec(KEY_STRING.getBytes(), 0, KEY_STRING.getBytes().length, "DES");
+            byte[] keyBytes = AuthenticationEndPoint.KEY_STRING.getBytes(StandardCharsets.UTF_8);
+            Key key = new SecretKeySpec(keyBytes, "HmacSHA512");
             Jwts.parser().setSigningKey(key).parseClaimsJws(token);
             System.out.println(">>> Token valide ✅");
         } catch (Exception e) {
