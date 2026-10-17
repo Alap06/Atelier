@@ -1,0 +1,42 @@
+package entities;
+
+import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Objects;
+
+@XmlRootElement
+public class UniteEnseignement {
+
+    private int    code;
+    private String domaine;
+    private String responsable;
+    private int    credits;
+    private int    semestre;
+
+    public UniteEnseignement() {}
+
+    public UniteEnseignement(int code, String domaine, String responsable, int credits, int semestre) {
+        this.code = code; this.domaine = domaine; this.responsable = responsable;
+        this.credits = credits; this.semestre = semestre;
+    }
+
+    public int    getCode()              { return code; }
+    public void   setCode(int code)      { this.code = code; }
+    public String getDomaine()           { return domaine; }
+    public void   setDomaine(String d)   { this.domaine = d; }
+    public String getResponsable()       { return responsable; }
+    public void   setResponsable(String r) { this.responsable = r; }
+    public int    getCredits()           { return credits; }
+    public void   setCredits(int c)      { this.credits = c; }
+    public int    getSemestre()          { return semestre; }
+    public void   setSemestre(int s)     { this.semestre = s; }
+
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UniteEnseignement)) return false;
+        return this.code == ((UniteEnseignement) o).code;
+    }
+    @Override public int hashCode() { return Objects.hash(code); }
+    @Override public String toString() {
+        return "UE{code=" + code + ", domaine='" + domaine + "', semestre=" + semestre + "}";
+    }
+}
